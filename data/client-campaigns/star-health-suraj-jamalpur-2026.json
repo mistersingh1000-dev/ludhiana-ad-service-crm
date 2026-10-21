@@ -1,0 +1,83 @@
+{
+  "client_id": "star-health-suraj-jamalpur-ludhiana",
+  "client_name": "Star Health Insurance — Mr. Suraj",
+  "contact_person": "Mr. Suraj",
+  "location": "Jamalpur, Ludhiana, Punjab",
+  "service": "Meta Facebook and Instagram advertising",
+  "objectives": [
+    "Insurance customer enquiries",
+    "Insurance agent recruitment"
+  ],
+  "source": "User-provided Meta Ads Manager screenshots",
+  "captured_on": "2026-10-21",
+  "metric_period": "Maximum (lifetime) selected in screenshots",
+  "campaigns": [
+    {
+      "name": "star health engagement ad",
+      "conversations": 114,
+      "spend_inr": 2462.1,
+      "cost_per_conversation_inr": 21.6,
+      "reach": 29033,
+      "impressions": 60581,
+      "status": "Not delivering"
+    },
+    {
+      "name": "star health agent ad campaign",
+      "conversations": 27,
+      "spend_inr": 504.02,
+      "cost_per_conversation_inr": 18.67,
+      "reach": 6786,
+      "impressions": 9652,
+      "status": "Off"
+    },
+    {
+      "name": "New Engagement Campaign - old",
+      "conversations": 42,
+      "spend_inr": 725.66,
+      "cost_per_conversation_inr": 17.28,
+      "reach": 8303,
+      "impressions": 14424,
+      "status": "Not delivering"
+    },
+    {
+      "name": "Star health Insurance -- Suraj",
+      "conversations": 13,
+      "spend_inr": 583.86,
+      "cost_per_conversation_inr": 44.91,
+      "reach": 5261,
+      "impressions": 8759,
+      "status": "Off"
+    },
+    {
+      "name": "Star health Insurance -- Suraj ad CAMPAIGN",
+      "conversations": 18,
+      "spend_inr": 1655.71,
+      "cost_per_conversation_inr": 91.98,
+      "reach": 17328,
+      "impressions": 33966,
+      "status": "Off"
+    },
+    {
+      "name": "STAR HEALTH 3 campaign",
+      "conversations": 161,
+      "spend_inr": 1694.91,
+      "cost_per_conversation_inr": 10.53,
+      "reach": 23243,
+      "impressions": 41905,
+      "status": "Not delivering"
+    }
+  ],
+  "totals": {
+    "messaging_conversations_started": 375,
+    "ad_spend_inr": 7626.26,
+    "weighted_cost_per_conversation_inr": 20.34
+  },
+  "notes": [
+    "Conversations are not confirmed leads, sales or recruited agents.",
+    "Reach cannot be summed into unique reach across campaigns.",
+    "Account spending limits reached or insufficient funds reported.",
+    "Keep separate from PNB MetLife and other clients.",
+    "Do not duplicate client on import; upsert by client_id.",
+    "Historical screenshot data, not live Meta API sync."
+  ]
+}
