@@ -1,0 +1,36 @@
+{
+  "client": "Thought of Gurbani",
+  "campaigns": [
+    {
+      "name": "Thought of Gurbani – Engagement Campaign",
+      "status": "Not delivering",
+      "messaging_conversations": 46,
+      "cost_per_conversation_inr": 50.45,
+      "reach": 37509,
+      "impressions": 65991,
+      "spent_inr": 2320.59
+    },
+    {
+      "name": "5 Posts Reach/Engagement Campaign",
+      "status": "Not delivering",
+      "post_interactions": 28697,
+      "cost_per_interaction_inr": 0.0408,
+      "reach": 67350,
+      "impressions": 110454,
+      "spent_inr": 1170.14
+    },
+    {
+      "name": "Reel viewss Campaign",
+      "status": "Not delivering",
+      "thruplays": 22488,
+      "cost_per_thruplay_inr": 0.052,
+      "reach": 70967,
+      "impressions": 96735,
+      "spent_inr": 1170.28
+    }
+  ],
+  "total_spend_inr": 4660.99,
+  "total_impressions_summed": 273180,
+  "account_notes": "Out of funds / account spend limit reached. Campaign reach figures overlap; do not sum as unique reach. Results are different types.",
+  "source": "User-supplied Meta Ads screenshots"
+}
