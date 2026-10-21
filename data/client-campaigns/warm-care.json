@@ -1,0 +1,42 @@
+{
+  "client": "WARM CARE",
+  "business_type": "Patient care services provider",
+  "source": "Meta Ads Manager screenshots supplied by user",
+  "campaigns": [
+    {
+      "name": "warm care leads campaign",
+      "status": "Active",
+      "objective": "Leads (Form)",
+      "results": 70,
+      "cost_per_result_inr": 26.73,
+      "spent_inr": 1871.22,
+      "daily_budget_inr": 180,
+      "reach": 12361,
+      "impressions": 26730
+    },
+    {
+      "name": "WARM CARE3 campaign",
+      "status": "Off",
+      "objective": "Engagement (Messaging)",
+      "results": 65,
+      "cost_per_result_inr": 13.06,
+      "spent_inr": 848.89,
+      "daily_budget_inr": 200,
+      "reach": 13183,
+      "impressions": 20546
+    },
+    {
+      "name": "WARM CARE CAMPAIGN",
+      "status": "Off",
+      "objective": "Engagement (Messaging)",
+      "results": 72,
+      "cost_per_result_inr": 17.64,
+      "spent_inr": 1269.74,
+      "daily_budget_inr": 300,
+      "reach": 19272,
+      "impressions": 32468,
+      "warning": "Instagram account permission error"
+    }
+  ],
+  "notes": "Lifetime/Maximum date range. Metrics are campaign-level and not verified sales."
+}
