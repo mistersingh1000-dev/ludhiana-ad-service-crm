@@ -1,0 +1,21 @@
+{
+  "client": "Tarashkari",
+  "contact_name": "Ms. Charanpreet Kaur",
+  "location": "Chandigarh Road",
+  "campaigns": [
+    {
+      "name": "New Engagement – Whatsapp enquiries",
+      "status": "Active (as shown in screenshot)",
+      "schedule": "2026-10-18 to 2026-10-23",
+      "campaign_budget_inr": 1000,
+      "spent_inr": 458.54,
+      "remaining_budget_inr": 541.46,
+      "messaging_conversations": 18,
+      "cost_per_conversation_inr": 25.47,
+      "reach": 3697,
+      "impressions": 5078
+    }
+  ],
+  "account_notes": "Billing screenshot: available funds ₹458.42, no payment method, GST verification prompt. Separate last-30-days view: 16 conversations, ₹403.90 spend, ₹25.24 per conversation. Do not sum with campaign totals.",
+  "source": "User-supplied Meta Ads screenshots"
+}
