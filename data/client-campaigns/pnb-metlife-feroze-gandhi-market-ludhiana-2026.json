@@ -1,0 +1,43 @@
+{
+  "client_id": "pnb-metlife-feroze-gandhi-market-ludhiana",
+  "client_name": "PNB MetLife",
+  "location": "Feroze Gandhi Market, Ludhiana",
+  "captured_on": "2026-10-21",
+  "source": "User-provided Meta Ads screenshots",
+  "campaigns": [
+    {
+      "name": "met life -- leads ads campaign",
+      "conversations": 0,
+      "spend_inr": 0,
+      "status": "Not delivering"
+    },
+    {
+      "name": "PNB METLIFE- MALE FEMALE JOB Campaign",
+      "conversations": 121,
+      "spend_inr": 551.53,
+      "status": "Off"
+    },
+    {
+      "name": "pnb - hiring males/females campaign",
+      "conversations": 3,
+      "spend_inr": 58.73,
+      "status": "Off"
+    },
+    {
+      "name": "PNB Met life insurance Campaign",
+      "conversations": 62,
+      "spend_inr": 2779.57,
+      "status": "Off"
+    }
+  ],
+  "totals": {
+    "conversations": 186,
+    "spend_inr": 3389.83
+  },
+  "notes": [
+    "Maximum lifetime figures shown.",
+    "Ad-level 92 conversations and ₹455.94 are subset of job campaign; not double-counted.",
+    "Spending limit reached.",
+    "Historical snapshot, not live sync."
+  ]
+}
