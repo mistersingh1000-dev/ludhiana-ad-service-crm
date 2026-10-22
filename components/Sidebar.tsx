@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, BellRing, CircleDollarSign, ContactRound, Gauge, Inbox, KanbanSquare, PlugZap, Settings, ShieldCheck, UsersRound } from "lucide-react";
+import { BarChart3, BellRing, CircleDollarSign, ContactRound, Gauge, Inbox, KanbanSquare, Bot, PlugZap, Settings, ShieldCheck, UsersRound } from "lucide-react";
 import { BRAND } from "@/lib/brand";
 
 const items = [
@@ -11,6 +11,7 @@ const items = [
   ["/dashboard/pipeline", "Pipeline", KanbanSquare],
   ["/dashboard/follow-ups", "Follow-ups", BellRing],
   ["/dashboard/inbox", "WhatsApp Inbox", Inbox],
+  ["/dashboard/automation", "Lead Intelligence", Bot],
   ["/dashboard/team", "Team", UsersRound],
   ["/dashboard/reports", "Reports", BarChart3],
   ["/dashboard/integrations", "Integrations", PlugZap],
