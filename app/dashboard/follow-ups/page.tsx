@@ -1,4 +1,31 @@
 "use client";
 import PageTitle from "@/components/PageTitle";
-import { useDemoCRM } from "@/components/DemoCRMProvider";
-export default function FollowUps(){const {leads,updateLead}=useDemoCRM();const active=leads.filter(l=>l.status!=="Lost"&&l.status!=="Converted");return <><PageTitle title="Follow-ups & Reminders" subtitle="Keep the next action visible until the customer is closed."/><div className="grid-2"><div className="card"><div className="card-head"><h3>Pending</h3><span className="status followup">{active.length} leads</span></div>{active.slice(0,7).map((l,i)=><div className="follow-card" key={l.id}><div className="follow-time">{i%2?'9:00 PM':'8:30 PM'}</div><span className="avatar">{l.name.split(' ').map(x=>x[0]).join('').slice(0,2)}</span><div className="follow-info"><strong>{l.name}</strong><span>{l.campaign} • {l.nextFollowUp}</span></div><button className="btn" style={{padding:'7px 9px'}} onClick={()=>updateLead(l.id,{status:'Contacted',nextFollowUp:'Completed',waiting:'—'})}>Done</button></div>)}</div><div className="card"><div className="card-head"><h3>Overdue 🔴</h3><span className="danger">Needs attention</span></div>{leads.filter(l=>l.waiting.includes('hr')).map((l,i)=><div className="follow-card" key={l.id}><div className="follow-time danger">{i+1}h late</div><span className="avatar">{l.name.split(' ').map(x=>x[0]).join('').slice(0,2)}</span><div className="follow-info"><strong>{l.name}</strong><span>Owner: {l.owner}</span></div><a className="btn" style={{padding:'7px 9px'}} target="_blank" rel="noreferrer" href={`https://wa.me/${l.phone.replace(/\D/g,'')}`}>WhatsApp</a></div>)}</div></div></>}
+import {useDemoCRM} from "@/components/DemoCRMProvider";
+import {createBrowserSupabaseClient} from "@/lib/supabase-browser";
+import Link from "next/link";
+import {useEffect,useState} from "react";
+type Task={id:string;lead_id:string;title:string;due_at:string|null;status:string};
+export default function FollowUps(){
+ const {leads,updateLead,mode}=useDemoCRM();
+ const [tasks,setTasks]=useState<Task[]>([]),[notice,setNotice]=useState("");
+ useEffect(()=>{if(mode!=="live")return;const s=createBrowserSupabaseClient();if(!s)return;
+  void s.from("lead_tasks").select("id,lead_id,title,due_at,status").eq("status","pending").order("due_at").limit(200)
+  .then(({data,error})=>{if(error)setNotice(error.message);else setTasks(data||[]);});
+ },[mode]);
+ const open=leads.filter(l=>l.status!=="Lost"&&l.status!=="Converted");
+ const due=open.filter(l=>{const d=new Date(l.nextFollowUp);return !Number.isNaN(d.getTime())&&d.getTime()<=Date.now();});
+ const overdue=tasks.filter(t=>t.due_at&&new Date(t.due_at).getTime()<=Date.now());
+ async function complete(id:string){const s=createBrowserSupabaseClient();if(!s)return;
+ const {error}=await s.from("lead_tasks").update({status:"done"}).eq("id",id);
+ if(error)setNotice(error.message);else setTasks(xs=>xs.filter(t=>t.id!==id));}
+ return <><PageTitle title="Follow-ups & Next Actions" subtitle="Callbacks, quotations and scheduled follow-ups for open leads."/>
+ {notice&&<div className="notice">{notice}</div>}
+ <div className="stats"><div className="stat"><div className="stat-label">Open leads</div><div className="stat-value">{open.length}</div></div><div className="stat"><div className="stat-label">Follow-ups due</div><div className="stat-value">{due.length}</div></div><div className="stat"><div className="stat-label">Pending tasks</div><div className="stat-value">{mode==="demo"?"Demo":tasks.length}</div></div></div>
+ <div className="grid-2" style={{marginTop:14}}>
+ <div className="card"><div className="card-head"><h3>Lead follow-up queue</h3></div><div className="card-body">{open.map(l=><div className="task" key={l.id}><div className="task-meta"><Link href={"/dashboard/leads/"+l.id}><strong>{l.name}</strong></Link><span>{l.nextFollowUp} • {l.owner} • {l.priority||"Unscored"}</span></div><button className="btn" onClick={()=>void updateLead(l.id,{status:"Contacted",nextFollowUp:"Completed"})}>Done</button></div>)}{!open.length&&<p>No open leads</p>}</div></div>
+ <div className="card"><div className="card-head"><h3>Action tasks</h3><span className={overdue.length?"danger":"small-note"}>{overdue.length} overdue</span></div><div className="card-body">
+ {mode==="demo"?open.slice(0,8).map(l=><div className="task" key={l.id}><div className="task-meta"><strong>{l.name}</strong><span>{l.suggestedAction||"Contact customer and clarify their need."}</span></div><Link className="btn" href={"/dashboard/leads/"+l.id}>Open</Link></div>):tasks.map(t=><div className="task" key={t.id}><div className="task-meta"><Link href={"/dashboard/leads/"+t.lead_id}><strong>{leads.find(l=>l.id===t.lead_id)?.name||"Lead"}</strong></Link><span>{t.title} • {t.due_at?new Date(t.due_at).toLocaleString("en-IN"):"Not set"}</span></div><button className="btn" onClick={()=>void complete(t.id)}>Done</button></div>)}
+ {!open.length&&mode==="demo"&&<p>No pending actions.</p>}{!tasks.length&&mode==="live"&&<p>No pending actions.</p>}</div></div></div>
+ <p className="small-note" style={{marginTop:12}}>In-app follow-ups are available. Automatic push/email reminder delivery requires a scheduled notification service.</p>
+ </>;
+}
