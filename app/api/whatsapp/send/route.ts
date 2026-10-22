@@ -27,20 +27,34 @@ export async function POST(req: NextRequest) {
   if (!text || text.length > 4096) return NextResponse.json({ error: "Message must contain 1 to 4096 characters." }, { status: 400 });
 
   const integration = await getProviderIntegration(service, organizationId, "whatsapp");
-  const token = integration?.accessToken || process.env.WHATSAPP_ACCESS_TOKEN || "";
-  const phoneId = String(integration?.config?.phone_number_id || process.env.WHATSAPP_PHONE_NUMBER_ID || "");
+  const token = integration?.accessToken || "";
+  const phoneId = String(integration?.config?.phone_number_id || "");
   const version = process.env.META_GRAPH_API_VERSION || "v24.0";
   if (!token || !phoneId) return NextResponse.json({ error: "WhatsApp is not connected for this CRM workspace." }, { status: 503 });
 
   let leadId = "";
   if (requestedLeadId) {
-    const { data: lead } = await service.from("leads").select("id").eq("id", requestedLeadId).eq("organization_id", organizationId).maybeSingle();
+    const { data: lead } = await service.from("leads").select("id,phone_normalized,opted_out_at").eq("id", requestedLeadId).eq("organization_id", organizationId).maybeSingle();
+    if(lead?.opted_out_at)return NextResponse.json({error:"Customer opted out of WhatsApp messages."},{status:403});
+    if(lead && String(lead.phone_normalized||"")!==to)return NextResponse.json({error:"Recipient number does not match the selected lead."},{status:400});
     leadId = lead?.id || "";
   }
   if (!leadId) {
-    const { data: lead } = await service.from("leads").select("id").eq("organization_id", organizationId).eq("phone_normalized", to).order("created_at", { ascending: false }).limit(1).maybeSingle();
+    const { data: lead } = await service.from("leads").select("id,opted_out_at").eq("organization_id", organizationId).eq("phone_normalized", to).order("created_at", { ascending: false }).limit(1).maybeSingle();
+    if(lead?.opted_out_at)return NextResponse.json({error:"Customer opted out of WhatsApp messages."},{status:403});
     leadId = lead?.id || "";
   }
+
+  // Do not initiate a WhatsApp conversation with a free-text message from a form lead.
+  // For proactive outreach, use an approved Meta WhatsApp template and required consent.
+  const {data:windowConversation}=await service.from("conversations").select("id")
+    .eq("organization_id",organizationId).eq("channel","whatsapp").eq("external_contact_id",to).maybeSingle();
+  if(!windowConversation?.id)return NextResponse.json({error:"No customer-initiated WhatsApp conversation. An approved template is required."},{status:403});
+  const {data:lastInbound}=await service.from("messages").select("created_at")
+    .eq("organization_id",organizationId).eq("conversation_id",windowConversation.id)
+    .eq("direction","inbound").order("created_at",{ascending:false}).limit(1).maybeSingle();
+  if(!lastInbound?.created_at || Date.now()-new Date(lastInbound.created_at).getTime()>23*3600000)
+    return NextResponse.json({error:"Customer service window closed. Use an approved WhatsApp template."},{status:403});
 
   const graphResponse = await fetch(`https://graph.facebook.com/${version}/${phoneId}/messages`, {
     method: "POST",

@@ -33,7 +33,7 @@ export default function Automation(){
  }
  async function done(id:string){const s=createBrowserSupabaseClient();if(!s)return;const {error}=await s.from("lead_tasks").update({status:"done"}).eq("id",id);if(error)setNotice(error.message);else setTasks(ts=>ts.filter(t=>t.id!==id));}
  return <><PageTitle title="Lead Intelligence & Auto Replies" subtitle="Analyze five lead-form answers and configure keyword-based WhatsApp responses."/>
- <div className="notice" style={{marginBottom:14}}>Auto-reply is OFF by default. In demo mode this page only previews reply text. Live messages require an official WhatsApp Cloud API connection; a human must confirm purchases and handle escalation.</div>
+ <div className="notice" style={{marginBottom:14}}>Auto-reply is OFF by default. In demo mode this page only previews reply text. Live messages require an official WhatsApp Cloud API connection and a recent inbound customer message. A 10-minute cooldown reduces repeated bot replies. A human must confirm purchases and handle escalation.</div>
  {notice&&<div className="notice" style={{marginBottom:14}}>{notice}</div>}
  <div className="grid-2"><div className="card"><div className="card-head"><h3>Test five lead-form answers</h3></div><div className="card-body form">
  {questions.map((x,i)=><label key={i}>{x}<input className="input" value={answers[x]||""} onChange={e=>setAnswers(a=>({...a,[x]:e.target.value}))} placeholder={"Answer "+(i+1)}/></label>)}

@@ -32,5 +32,7 @@ export const defaultReplyRules:ReplyRule[]=[
 export function chooseReply(message:string,rules:ReplyRule[]):ReplyRule|null{
  const lower=message.toLowerCase();
  if(/\b(stop|unsubscribe|opt out|wrong number|not interested)\b|नहीं चाहिए|मत भेज/iu.test(lower))return null;
- return rules.find(r=>Array.isArray(r.keywords)&&r.keywords.some(k=>k.trim().length>=2&&lower.includes(k.trim().toLowerCase())))||null;
+ // A human handoff rule takes precedence over generic pricing or appointment keywords.
+ const available=rules.filter(r=>Array.isArray(r.keywords)&&r.keywords.some(k=>k.trim().length>=2&&lower.includes(k.trim().toLowerCase())));
+ return available.find(r=>r.handoff===true)||available[0]||null;
 }

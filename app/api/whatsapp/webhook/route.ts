@@ -67,7 +67,7 @@ export async function POST(req: NextRequest) {
         const contactName = String(value?.contacts?.[0]?.profile?.name || `WhatsApp ${from.slice(-4)}`);
 
         const { data: existingLead } = await service.from("leads")
-          .select("id,name,status,qualification_answers,opted_out_at")
+          .select("id,name,status,qualification_answers,opted_out_at,last_auto_reply_at")
           .eq("organization_id", organizationId)
           .eq("phone_normalized", from)
           .order("created_at", { ascending: false })
@@ -123,7 +123,14 @@ export async function POST(req: NextRequest) {
         }
         const {data:bot}=await service.from("automation_settings").select("auto_reply_enabled,reply_rules").eq("organization_id",organizationId).maybeSingle();
         const isText=["text","button","interactive"].includes(String(message?.type||""));
-        if(bot?.auto_reply_enabled&&isText&&integration?.accessToken&&!existingLead?.opted_out_at){
+        // Reject old/delayed webhook events: free-form WhatsApp replies are only allowed
+        // during an open customer-service window.
+        const eventSeconds=Number(message?.timestamp||0);
+        const eventAge=Date.now()-eventSeconds*1000;
+        const recentInbound=eventSeconds>0&&eventAge>=-300000&&eventAge<23*3600000;
+        const lastReply=existingLead?.last_auto_reply_at ? new Date(existingLead.last_auto_reply_at).getTime():0;
+        const cooldownComplete=!lastReply || (Date.now()-lastReply>10*60000);
+        if(bot?.auto_reply_enabled&&isText&&recentInbound&&cooldownComplete&&integration?.accessToken&&!existingLead?.opted_out_at){
           const rules:ReplyRule[]=Array.isArray(bot.reply_rules)&&bot.reply_rules.length?bot.reply_rules:defaultReplyRules;
           const match=chooseReply(inboundText,rules);
           if(match?.handoff&&leadId){
@@ -140,8 +147,12 @@ export async function POST(req: NextRequest) {
                 body:JSON.stringify({messaging_product:"whatsapp",recipient_type:"individual",to:from,type:"text",text:{body:match.reply,preview_url:false}})
               });
               const result=await r.json().catch(()=>({}));
-              if(r.ok)await service.from("messages").insert({organization_id:organizationId,conversation_id:conversation.id,
-                direction:"outbound",body:match.reply,provider_message_id:result?.messages?.[0]?.id||null,status:"sent"});
+              if(r.ok){
+                await service.from("messages").insert({organization_id:organizationId,conversation_id:conversation.id,
+                  direction:"outbound",body:match.reply,provider_message_id:result?.messages?.[0]?.id||null,status:"sent"});
+                if(leadId)await service.from("leads").update({last_auto_reply_at:new Date().toISOString()})
+                  .eq("id",leadId).eq("organization_id",organizationId);
+              }
             }catch{/* Keep human follow-up visible. */}
           }
         }

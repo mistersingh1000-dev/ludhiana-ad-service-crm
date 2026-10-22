@@ -125,3 +125,8 @@ New CRM add-ons:
 Database setup: apply `supabase/migrations/006_lead_intelligence.sql` **after migrations 001–005**. New functionality needs real Supabase/Meta/WhatsApp credentials and a successful Vercel production build, which has not yet been verified.
 
 Without official API, customers can use WhatsApp Business App's built-in greeting/away messages and this CRM's prepared WhatsApp drafts, but not CRM-controlled unattended WhatsApp auto responses.
+
+Apply `supabase/migrations/007_auto_reply_safety.sql` after migration 006 to enable the anti-spam cooldown timestamp.
+
+### Reply safety and limitations
+Automatic WhatsApp replies are OFF by default and require tenant-specific official Cloud API credentials plus a fresh inbound message. Delayed messages (over 23 hours) are not auto-replied. Bot replies are throttled per lead (10 minutes). Human-handoff rules get priority. Sending unsolicited free-form WhatsApp messages from Meta Instant Form leads is deliberately blocked. Approved template messaging, paid checkout, and scheduled push notifications are separate future integrations.
