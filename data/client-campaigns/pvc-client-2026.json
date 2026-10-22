@@ -1,0 +1,47 @@
+{
+  "client_id": "pvc-client",
+  "client_name": "PVC",
+  "location": null,
+  "source": "User-provided Meta Ads Manager screenshots",
+  "captured_on": "2026-10-21",
+  "metric_period": "Maximum (lifetime) selected",
+  "campaigns": [
+    {
+      "name": "Song2 reel Engagement campaign",
+      "messaging_conversations_started": 28,
+      "spend_inr": 853.38,
+      "cost_per_conversation_inr": 30.48,
+      "status": "Active"
+    },
+    {
+      "name": "Song reel Engagement campaign",
+      "messaging_conversations_started": 516,
+      "spend_inr": 8629.15,
+      "cost_per_conversation_inr": 16.72,
+      "status": "Off"
+    },
+    {
+      "name": "Interior reel Engagement Campaign",
+      "messaging_conversations_started": 178,
+      "spend_inr": 4919.02,
+      "cost_per_conversation_inr": 27.63,
+      "status": "Off"
+    },
+    {
+      "name": "Interior hub campaign",
+      "messaging_conversations_started": 108,
+      "spend_inr": 3824.74,
+      "cost_per_conversation_inr": 35.41,
+      "status": "Off"
+    }
+  ],
+  "totals": {
+    "messaging_conversations_started": 830,
+    "ad_spend_inr": 18226.29
+  },
+  "notes": [
+    "PVC is account label, client identity and location not confirmed.",
+    "Historical snapshots; conversations do not equal confirmed leads or sales.",
+    "Do not double-count campaign-level and ad-level statistics."
+  ]
+}

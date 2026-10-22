@@ -1,0 +1,169 @@
+{
+  "source": "User list supplied 2026-10-21; prior chat screenshots not fully accessible",
+  "purpose": "Staging registry only; NOT proof of live CRM or website update",
+  "merge_policy": "Merge by canonical client ID, preserve existing records, never replace nonempty fields with null, manually verify aliases",
+  "records": [
+    {
+      "id": "client-nails-by-lisa",
+      "name": "Nails by Lisa",
+      "location": null,
+      "record_status": "pending_source_verification",
+      "campaign_metrics": null,
+      "contact": null,
+      "notes": null
+    },
+    {
+      "id": "client-beauty-expert",
+      "name": "Beauty Expert",
+      "location": null,
+      "record_status": "pending_source_verification",
+      "campaign_metrics": null,
+      "contact": null,
+      "notes": null
+    },
+    {
+      "id": "client-ic-agent",
+      "name": "IC Agent",
+      "location": null,
+      "record_status": "pending_source_verification",
+      "campaign_metrics": null,
+      "contact": null,
+      "notes": null
+    },
+    {
+      "id": "client-sumit",
+      "name": "Sumit",
+      "location": "Malerkotla",
+      "record_status": "pending_source_verification",
+      "campaign_metrics": null,
+      "contact": null,
+      "notes": null
+    },
+    {
+      "id": "client-ludhiana-hair-service",
+      "name": "Ludhiana Hair Service",
+      "location": "Ludhiana",
+      "record_status": "pending_source_verification",
+      "campaign_metrics": null,
+      "contact": null,
+      "notes": null
+    },
+    {
+      "id": "client-website-development",
+      "name": "Website Development",
+      "location": null,
+      "record_status": "pending_source_verification",
+      "campaign_metrics": null,
+      "contact": null,
+      "notes": null
+    },
+    {
+      "id": "client-amble-overseas",
+      "name": "Amble Overseas",
+      "location": null,
+      "record_status": "pending_source_verification",
+      "campaign_metrics": null,
+      "contact": null,
+      "notes": null
+    },
+    {
+      "id": "client-fashion-frenzy",
+      "name": "Fashion Frenzy",
+      "location": null,
+      "record_status": "pending_source_verification",
+      "campaign_metrics": null,
+      "contact": null,
+      "notes": null
+    },
+    {
+      "id": "client-ruchika",
+      "name": "Ruchika",
+      "location": null,
+      "record_status": "pending_source_verification",
+      "campaign_metrics": null,
+      "contact": null,
+      "notes": null
+    },
+    {
+      "id": "client-ruchika-english-finance",
+      "name": "Ruchika English Finance",
+      "location": "Gurgaon (association to verify)",
+      "record_status": "pending_source_verification",
+      "campaign_metrics": null,
+      "contact": null,
+      "notes": null
+    },
+    {
+      "id": "client-adran",
+      "name": "Adran",
+      "location": "Canada",
+      "record_status": "pending_source_verification",
+      "campaign_metrics": null,
+      "contact": null,
+      "notes": null
+    },
+    {
+      "id": "client-digijyar-consultancy",
+      "name": "Digijyar Consultancy",
+      "location": null,
+      "record_status": "pending_source_verification",
+      "campaign_metrics": null,
+      "contact": null,
+      "notes": null
+    },
+    {
+      "id": "client-cg-visa",
+      "name": "CG Visa",
+      "location": "Kharar, Mohali, Punjab",
+      "record_status": "pending_source_verification",
+      "campaign_metrics": null,
+      "contact": null,
+      "notes": "Existing CG VISA promotional artwork gives SCF 10, Near Western Towers, Nijjar Road, Kharar, Mohali. Verify business contact before CRM import."
+    },
+    {
+      "id": "client-raj-astrologer",
+      "name": "Raj Astrologer",
+      "location": null,
+      "record_status": "pending_source_verification",
+      "campaign_metrics": null,
+      "contact": null,
+      "notes": null
+    },
+    {
+      "id": "client-rosaline",
+      "name": "Rosaline",
+      "location": "Janakpuri, Delhi",
+      "record_status": "pending_source_verification",
+      "campaign_metrics": null,
+      "contact": null,
+      "notes": "Possible match to ASTROLOGER ROSELEAN brief, which targets Janakpuri/Delhi/Gurgaon/Noida; identity not yet confirmed."
+    },
+    {
+      "id": "client-bricks-by-bricks",
+      "name": "Bricks by Bricks",
+      "location": null,
+      "record_status": "pending_source_verification",
+      "campaign_metrics": null,
+      "contact": null,
+      "notes": null
+    },
+    {
+      "id": "client-warm-care-service",
+      "name": "Warm Care Service",
+      "location": null,
+      "record_status": "pending_source_verification",
+      "campaign_metrics": null,
+      "contact": null,
+      "notes": null
+    },
+    {
+      "id": "client-patient-care-service-provider",
+      "name": "Patient Care Service Provider",
+      "location": null,
+      "record_status": "pending_source_verification",
+      "campaign_metrics": null,
+      "contact": null,
+      "notes": null
+    }
+  ]
+}
