@@ -13,7 +13,7 @@ export default function LeadDetails(){
  const {leads,updateLead,mode}=useDemoCRM();
  const lead=leads.find(x=>x.id===id);
  const [edited,setEdited]=useState<Record<string,string>|null>(null),[message,setMessage]=useState(""),[notice,setNotice]=useState(""),[schedule,setSchedule]=useState("");
- if(!lead)return <><PageTitle title="Lead details"/><Link href="/dashboard/leads">Back to leads</Link></>;
+ if(!lead)return <><PageTitle title="Lead details" subtitle="Open a customer from Lead Manager."/><Link href="/dashboard/leads">Back to leads</Link></>;
  const answers=edited||lead.answers||{};
  const existing=Object.entries(answers);
  const pairs=Array.from({length:5},(_,i)=>existing[i]||[labels[i],""]);
