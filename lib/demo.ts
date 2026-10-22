@@ -12,6 +12,13 @@ export type Lead = {
   waiting: string;
   value: number;
   createdAt: string;
+  answers?: Record<string,string>;
+  score?: number;
+  priority?: "Hot"|"Warm"|"Cold";
+  intent?: string;
+  suggestedAction?: string;
+  suggestedReply?: string;
+  summary?: string;
 };
 
 export const leads: Lead[] = [
