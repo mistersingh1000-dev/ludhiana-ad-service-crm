@@ -110,3 +110,18 @@ The current billing page and plan model are ready for product positioning, but p
 - Meta/WhatsApp webhooks verify `X-Hub-Signature-256` in production.
 - Incoming provider message/lead IDs are stored idempotently to reduce duplicate processing.
 - Never commit `.env.local`, service-role keys, access tokens, or encryption keys.
+
+## Lead Intelligence + Auto Responder (2026-10-22)
+
+New CRM add-ons:
+- Meta Instant Form answers are stored per lead and classified by a rule-based qualification engine (Hot/Warm/Cold, intent, suggested CRM stage, recommended next action and reply draft).
+- The individual Lead Detail page lets staff edit up to five question/answer pairs, call the lead, set the actual stage, schedule follow-up and open a prefilled **manual-send** WhatsApp reply.
+- Lead Intelligence page tests custom form answers and incoming messages and lets company managers configure keyword-to-reply rules with human handoff.
+- Company-isolated follow-up tasks are recorded and can be marked Done.
+- WhatsApp inbound auto-replies require **official Cloud API**, an owner/manager-enabled switch (OFF by default), a matched rule and a new inbound customer message. Opt-outs do not receive replies. Duplicate webhook messages are ignored to reduce double sends.
+- Meta lead-form submissions create a qualified lead and human action task, **not** unsolicited WhatsApp messages. Proactive WhatsApp messages require contact permissions and approved templates.
+- This is **rule-based qualification**, NOT a trained generative AI chatbot. Automatic phone calls, booked appointments, payments, outbound template campaigns, browser-only WhatsApp Business App automation and scheduled email/push notifications are not implemented.
+
+Database setup: apply `supabase/migrations/006_lead_intelligence.sql` **after migrations 001–005**. New functionality needs real Supabase/Meta/WhatsApp credentials and a successful Vercel production build, which has not yet been verified.
+
+Without official API, customers can use WhatsApp Business App's built-in greeting/away messages and this CRM's prepared WhatsApp drafts, but not CRM-controlled unattended WhatsApp auto responses.
