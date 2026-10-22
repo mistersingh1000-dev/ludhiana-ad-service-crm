@@ -20,5 +20,7 @@ jobs:
           node-version: '22'
       - name: Install dependencies
         run: npm install --no-audit --no-fund
+      - name: Rule-based qualification tests
+        run: npm run test:rules
       - name: Production build
         run: npm run build
