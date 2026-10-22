@@ -2,6 +2,7 @@
 
 import { Lead, LeadStatus, leads as seedLeads } from "@/lib/demo";
 import { createBrowserSupabaseClient } from "@/lib/supabase-browser";
+import { qualifyLead } from "@/lib/lead-intelligence";
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
 type CRMContextValue = {
@@ -41,7 +42,7 @@ function rowToLead(row:any): Lead {
   return {
     id:String(row.id), name:row.name || "Unnamed lead", phone:row.phone || "", source:row.source || "Manual",
     campaign:row.campaign || "Unspecified", owner:row.owner_name || "Unassigned", status:dbToUi[row.status] || "New",
-    nextFollowUp:formatFollowUp(row.next_follow_up_at), waiting:waitingSince(row.created_at,row.last_contacted_at,row.status), value:Number(row.pipeline_value || 0), createdAt:row.created_at || new Date().toISOString(),
+    nextFollowUp:formatFollowUp(row.next_follow_up_at),answers:row.qualification_answers||{},score:row.lead_score||0,priority:row.lead_priority||"Cold",intent:row.lead_intent||"information",suggestedAction:row.suggested_action||"",suggestedReply:row.suggested_reply||"",summary:row.lead_summary||"", waiting:waitingSince(row.created_at,row.last_contacted_at,row.status), value:Number(row.pipeline_value || 0), createdAt:row.created_at || new Date().toISOString(),
   };
 }
 
@@ -71,7 +72,7 @@ export default function DemoCRMProvider({ children }: { children: React.ReactNod
       if(cancelled)return;
       if(profileError||!profile?.organization_id){setError("CRM workspace could not be loaded.");setLoading(false);return;}
       setOrgId(profile.organization_id);
-      const {data:rows,error:leadError}=await supabase.from("leads").select("id,name,phone,source,campaign,owner_name,status,next_follow_up_at,pipeline_value,created_at,last_contacted_at").order("created_at",{ascending:false});
+      const {data:rows,error:leadError}=await supabase.from("leads").select("id,name,phone,source,campaign,owner_name,status,next_follow_up_at,pipeline_value,created_at,last_contacted_at,qualification_answers,lead_score,lead_priority,lead_intent,suggested_action,suggested_reply,lead_summary").order("created_at",{ascending:false});
       if(cancelled)return;
       if(leadError)setError(leadError.message); else setLeads((rows||[]).map(rowToLead));
       setLoading(false);
@@ -85,18 +86,23 @@ export default function DemoCRMProvider({ children }: { children: React.ReactNod
   }, [leads, hydrated, mode]);
 
   async function addLead(lead: Omit<Lead,"id">){
-    if(mode==="demo"||!supabase){setLeads(current=>[{...lead,id:String(Date.now()),createdAt:lead.createdAt || new Date().toISOString()},...current]);return;}
+    const q=qualifyLead(lead.answers||{},"",lead.name);
+    const enriched={...lead,score:q.score,priority:q.priority,intent:q.intent,suggestedAction:q.nextAction,suggestedReply:q.replyDraft,summary:q.summary};
+    if(mode==="demo"||!supabase){setLeads(current=>[{...enriched,id:String(Date.now()),createdAt:lead.createdAt || new Date().toISOString()},...current]);return;}
     if(!orgId){setError("Workspace is still loading. Please try again.");return;}
-    const payload={organization_id:orgId,name:lead.name,phone:lead.phone,source:lead.source,campaign:lead.campaign,owner_name:lead.owner,status:uiToDb[lead.status],next_follow_up_at:toIsoOrNull(lead.nextFollowUp),pipeline_value:lead.value};
-    const {data,error:insertError}=await supabase.from("leads").insert(payload).select("id,name,phone,source,campaign,owner_name,status,next_follow_up_at,pipeline_value,created_at,last_contacted_at").single();
-    if(insertError){setError(insertError.message);return;} if(data)setLeads(current=>[rowToLead(data),...current]);
+    const payload={organization_id:orgId,name:lead.name,phone:lead.phone,source:lead.source,campaign:lead.campaign,owner_name:lead.owner,status:uiToDb[lead.status],next_follow_up_at:toIsoOrNull(lead.nextFollowUp),pipeline_value:lead.value,qualification_answers:lead.answers||{},lead_score:q.score,lead_priority:q.priority,lead_intent:q.intent,suggested_action:q.nextAction,suggested_reply:q.replyDraft,lead_summary:q.summary};
+    const {data,error:insertError}=await supabase.from("leads").insert(payload).select("id,name,phone,source,campaign,owner_name,status,next_follow_up_at,pipeline_value,created_at,last_contacted_at,qualification_answers,lead_score,lead_priority,lead_intent,suggested_action,suggested_reply,lead_summary").single();
+    if(insertError){setError(insertError.message);return;} if(data){setLeads(current=>[rowToLead(data),...current]);await supabase.from("lead_tasks").upsert({organization_id:orgId,lead_id:data.id,task_key:q.taskKey,title:q.nextAction,due_at:new Date(Date.now()+q.followUpHours*3600000).toISOString()},{onConflict:"organization_id,lead_id,task_key",ignoreDuplicates:true});}
   }
   async function updateLead(id:string,patch:Partial<Lead>){
-    const effectivePatch = patch.status && patch.status !== "New" && patch.waiting === undefined ? {...patch,waiting:"—"} : patch;
+    const currentLead=leads.find(l=>l.id===id);
+    const q=patch.answers!==undefined?qualifyLead(patch.answers,"",patch.name||currentLead?.name||"Customer"):null;
+    const effectivePatch={...patch,...(q?{score:q.score,priority:q.priority,intent:q.intent,suggestedAction:q.nextAction,suggestedReply:q.replyDraft,summary:q.summary}:{})};
+    if(patch.status && patch.status!=="New" && patch.waiting===undefined) effectivePatch.waiting="—";
     setLeads(current=>current.map(lead=>lead.id===id?{...lead,...effectivePatch}:lead));
     if(mode==="demo"||!supabase)return;
     const dbPatch:any={};
-    if(patch.name!==undefined)dbPatch.name=patch.name;if(patch.phone!==undefined)dbPatch.phone=patch.phone;if(patch.source!==undefined)dbPatch.source=patch.source;if(patch.campaign!==undefined)dbPatch.campaign=patch.campaign;if(patch.owner!==undefined)dbPatch.owner_name=patch.owner;if(patch.status!==undefined){dbPatch.status=uiToDb[patch.status];if(patch.status!=="New")dbPatch.last_contacted_at=new Date().toISOString();}if(patch.nextFollowUp!==undefined)dbPatch.next_follow_up_at=toIsoOrNull(patch.nextFollowUp);if(patch.value!==undefined)dbPatch.pipeline_value=patch.value;
+    if(patch.name!==undefined)dbPatch.name=patch.name;if(patch.phone!==undefined)dbPatch.phone=patch.phone;if(patch.source!==undefined)dbPatch.source=patch.source;if(patch.campaign!==undefined)dbPatch.campaign=patch.campaign;if(patch.owner!==undefined)dbPatch.owner_name=patch.owner;if(patch.status!==undefined){dbPatch.status=uiToDb[patch.status];if(patch.status!=="New")dbPatch.last_contacted_at=new Date().toISOString();}if(patch.nextFollowUp!==undefined)dbPatch.next_follow_up_at=toIsoOrNull(patch.nextFollowUp);if(patch.value!==undefined)dbPatch.pipeline_value=patch.value;if(q){dbPatch.qualification_answers=patch.answers;dbPatch.lead_score=q.score;dbPatch.lead_priority=q.priority;dbPatch.lead_intent=q.intent;dbPatch.suggested_action=q.nextAction;dbPatch.suggested_reply=q.replyDraft;dbPatch.lead_summary=q.summary;}
     const {error:updateError}=await supabase.from("leads").update(dbPatch).eq("id",id);if(updateError)setError(updateError.message);
   }
   function resetDemo(){if(mode!=="demo")return;setLeads(seedLeads);localStorage.removeItem(STORAGE_KEY);}
