@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase-server";
 import { verifyMetaSignature } from "@/lib/meta-signature";
 import { findProviderIntegrationByConfig, normalizePhone } from "@/lib/integrations";
+import { chooseReply,defaultReplyRules,ReplyRule } from "@/lib/lead-intelligence";
+import { saveQualification } from "@/lib/qualification-actions";
 
 function messageText(message: any) {
   if (message?.type === "text") return String(message?.text?.body || "");
@@ -46,7 +48,7 @@ export async function POST(req: NextRequest) {
         const providerMessageId = String(status?.id || "");
         const state = String(status?.status || "");
         if (providerMessageId && state) {
-          await service.from("messages").update({ status: state }).eq("provider_message_id", providerMessageId);
+          await service.from("messages").update({ status: state }).eq("provider_message_id", providerMessageId).eq("organization_id",organizationId);
           await service.from("integration_events").upsert({
             organization_id: organizationId,
             provider: "whatsapp",
@@ -65,7 +67,7 @@ export async function POST(req: NextRequest) {
         const contactName = String(value?.contacts?.[0]?.profile?.name || `WhatsApp ${from.slice(-4)}`);
 
         const { data: existingLead } = await service.from("leads")
-          .select("id")
+          .select("id,name,status,qualification_answers,opted_out_at")
           .eq("organization_id", organizationId)
           .eq("phone_normalized", from)
           .order("created_at", { ascending: false })
@@ -73,6 +75,7 @@ export async function POST(req: NextRequest) {
           .maybeSingle();
 
         let leadId = existingLead?.id as string | undefined;
+        const inboundText=messageText(message);
         if (!leadId) {
           const { data: createdLead } = await service.from("leads").insert({
             organization_id: organizationId,
@@ -105,15 +108,42 @@ export async function POST(req: NextRequest) {
           await service.from("conversations").update({ lead_id: leadId || null, last_message_at: new Date().toISOString() }).eq("id", conversation.id);
         }
 
-        if (conversation?.id) {
-          await service.from("messages").upsert({
-            organization_id: organizationId,
-            conversation_id: conversation.id,
-            direction: "inbound",
-            body: messageText(message),
-            provider_message_id: providerMessageId,
-            status: "received",
-          }, { onConflict: "provider_message_id", ignoreDuplicates: true });
+        if(!conversation?.id)continue;
+        const {error:msgError}=await service.from("messages").insert({
+          organization_id:organizationId,conversation_id:conversation.id,direction:"inbound",
+          body:inboundText,provider_message_id:providerMessageId,status:"received"
+        });
+        if(msgError?.code==="23505")continue; // duplicate webhook: never reply twice
+        if(msgError)continue;
+        if(leadId){
+          try{await saveQualification(service,organizationId,leadId,{
+             name:existingLead?.name||contactName,answers:existingLead?.qualification_answers||{},
+             message:inboundText,currentStatus:existingLead?.status||"new"
+          });}catch{/* Incoming message is already saved; human can follow up. */}
+        }
+        const {data:bot}=await service.from("automation_settings").select("auto_reply_enabled,reply_rules").eq("organization_id",organizationId).maybeSingle();
+        const isText=["text","button","interactive"].includes(String(message?.type||""));
+        if(bot?.auto_reply_enabled&&isText&&integration?.accessToken&&!existingLead?.opted_out_at){
+          const rules:ReplyRule[]=Array.isArray(bot.reply_rules)&&bot.reply_rules.length?bot.reply_rules:defaultReplyRules;
+          const match=chooseReply(inboundText,rules);
+          if(match?.handoff&&leadId){
+            await service.from("lead_tasks").upsert({organization_id:organizationId,lead_id:leadId,
+              task_key:"handoff_"+providerMessageId,title:"Human agent requested — check WhatsApp conversation",
+              due_at:new Date(Date.now()+15*60000).toISOString(),status:"pending"
+            },{onConflict:"organization_id,lead_id,task_key",ignoreDuplicates:true});
+          }
+          if(match?.reply&&match.reply.length<=4096){
+            const version=process.env.META_GRAPH_API_VERSION||"v24.0";
+            try{
+              const r=await fetch("https://graph.facebook.com/"+version+"/"+encodeURIComponent(phoneNumberId)+"/messages",{
+                method:"POST",headers:{Authorization:"Bearer "+integration.accessToken,"Content-Type":"application/json"},
+                body:JSON.stringify({messaging_product:"whatsapp",recipient_type:"individual",to:from,type:"text",text:{body:match.reply,preview_url:false}})
+              });
+              const result=await r.json().catch(()=>({}));
+              if(r.ok)await service.from("messages").insert({organization_id:organizationId,conversation_id:conversation.id,
+                direction:"outbound",body:match.reply,provider_message_id:result?.messages?.[0]?.id||null,status:"sent"});
+            }catch{/* Keep human follow-up visible. */}
+          }
         }
 
         await service.from("integration_events").upsert({
