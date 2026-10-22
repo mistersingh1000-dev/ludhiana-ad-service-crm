@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase-server";
 import { verifyMetaSignature } from "@/lib/meta-signature";
 import { findProviderIntegrationByConfig, normalizePhone } from "@/lib/integrations";
+import { saveQualification } from "@/lib/qualification-actions";
 
 function fieldMap(fieldData: any[]) {
   const out: Record<string, string> = {};
@@ -66,7 +67,9 @@ export async function POST(req: NextRequest) {
         const phone = values.phone_number || values.phone || values.mobile_number || values.mobile || "";
         const email = values.email || "";
 
-        const { error: leadError } = await service.from("leads").upsert({
+        const { data:existing } = await service.from("leads").select("id").eq("meta_lead_id",leadId).maybeSingle();
+        if(existing?.id){if(event?.id)await service.from("integration_events").update({processed_at:new Date().toISOString()}).eq("id",event.id);continue;}
+        const {data:savedLead,error:leadError} = await service.from("leads").insert({
           organization_id: organizationId,
           name: fullName,
           phone,
@@ -78,7 +81,11 @@ export async function POST(req: NextRequest) {
           ad_name: lead?.ad_name || value?.ad_id || "",
           status: "new",
           meta_lead_id: leadId,
-        }, { onConflict: "meta_lead_id" });
+        }).select("id,status").single();
+        if (!leadError && savedLead?.id) {
+          try { await saveQualification(service,organizationId,savedLead.id,{name:fullName,answers:values,currentStatus:savedLead.status}); }
+          catch { continue; }
+        }
         if (!leadError && event?.id) {
           await service.from("integration_events").update({ processed_at: new Date().toISOString() }).eq("id", event.id);
         }
