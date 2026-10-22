@@ -109,9 +109,13 @@ export async function POST(req: NextRequest) {
         }
 
         if(!conversation?.id)continue;
+        const providerTimestamp=Number(message?.timestamp||0);
+        const validTimestamp=providerTimestamp>0 && Number.isFinite(providerTimestamp) &&
+          providerTimestamp*1000<=Date.now()+300000 && providerTimestamp*1000>=Date.now()-30*86400000;
         const {error:msgError}=await service.from("messages").insert({
           organization_id:organizationId,conversation_id:conversation.id,direction:"inbound",
-          body:inboundText,provider_message_id:providerMessageId,status:"received"
+          body:inboundText,provider_message_id:providerMessageId,status:"received",
+          ...(validTimestamp?{created_at:new Date(providerTimestamp*1000).toISOString()}:{})
         });
         if(msgError?.code==="23505")continue; // duplicate webhook: never reply twice
         if(msgError)continue;
@@ -130,15 +134,16 @@ export async function POST(req: NextRequest) {
         const recentInbound=eventSeconds>0&&eventAge>=-300000&&eventAge<23*3600000;
         const lastReply=existingLead?.last_auto_reply_at ? new Date(existingLead.last_auto_reply_at).getTime():0;
         const cooldownComplete=!lastReply || (Date.now()-lastReply>10*60000);
+        const rules:ReplyRule[]=Array.isArray(bot?.reply_rules)&&bot.reply_rules.length?bot.reply_rules:defaultReplyRules;
+        const match=chooseReply(inboundText,rules);
+        // Human handoff must be tracked even when the chatbot is turned OFF.
+        if(match?.handoff && leadId && !existingLead?.opted_out_at){
+          await service.from("lead_tasks").upsert({organization_id:organizationId,lead_id:leadId,
+            task_key:"handoff_"+providerMessageId,title:"Human agent requested — check WhatsApp conversation",
+            due_at:new Date(Date.now()+15*60000).toISOString(),status:"pending"
+          },{onConflict:"organization_id,lead_id,task_key",ignoreDuplicates:true});
+        }
         if(bot?.auto_reply_enabled&&isText&&recentInbound&&cooldownComplete&&integration?.accessToken&&!existingLead?.opted_out_at){
-          const rules:ReplyRule[]=Array.isArray(bot.reply_rules)&&bot.reply_rules.length?bot.reply_rules:defaultReplyRules;
-          const match=chooseReply(inboundText,rules);
-          if(match?.handoff&&leadId){
-            await service.from("lead_tasks").upsert({organization_id:organizationId,lead_id:leadId,
-              task_key:"handoff_"+providerMessageId,title:"Human agent requested — check WhatsApp conversation",
-              due_at:new Date(Date.now()+15*60000).toISOString(),status:"pending"
-            },{onConflict:"organization_id,lead_id,task_key",ignoreDuplicates:true});
-          }
           if(match?.reply&&match.reply.length<=4096){
             const version=process.env.META_GRAPH_API_VERSION||"v24.0";
             try{
